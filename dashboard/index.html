@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — pre-token protocols ranked by implied value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="pulse" aria-hidden="true"></div>
+    <div>
+      <h1>TOKEN RADAR</h1>
+      <p class="tagline">Pre-token protocols, ranked by what a launch could be worth — and how to farm each one.</p>
+    </div>
+  </div>
+  <dl class="stats" id="stats"></dl>
+</header>
+
+<nav class="tabs" aria-label="Views">
+  <button type="button" data-tab="board" class="active">Pre-token board</button>
+  <button type="button" data-tab="live">Live tokens</button>
+  <button type="button" data-tab="model">Model &amp; method</button>
+</nav>
+
+<section id="view-board" class="view">
+  <div class="controls" role="search">
+    <label>Search <input id="q" type="search" placeholder="Name or slug…" autocomplete="off"></label>
+    <label>Category <select id="cat"><option value="">All categories</option></select></label>
+    <label>Chain <select id="chain"><option value="">All chains</option></select></label>
+    <label class="check"><input id="watch" type="checkbox"> Watchlist only</label>
+    <label>Sort <select id="sort">
+      <option value="rank">Rank (implied value)</option>
+      <option value="tvl">TVL</option>
+      <option value="growth">7-day change</option>
+      <option value="age">Age</option>
+      <option value="confidence">Confidence</option>
+    </select></label>
+  </div>
+  <p class="count" id="count"></p>
+  <div class="table-wrap">
+    <table id="board">
+      <thead><tr>
+        <th class="num">#</th><th>Protocol</th><th>Category</th><th>Chains</th>
+        <th class="num">TVL</th><th class="num">7d</th><th class="num">Age</th>
+        <th class="num">Implied value</th><th class="num">Confidence</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <p class="hint">Select a row to open its farm plan and model breakdown.</p>
+  <article id="detail" class="detail" hidden></article>
+</section>
+
+<section id="view-live" class="view" hidden>
+  <p class="lede">These protocols already trade. The board shows the market's own value for them, never a model's guess — they are set aside so the ranking stays about launches that have not happened yet.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Protocol</th><th>Category</th><th>Chains</th><th class="num">TVL</th><th class="num">Market cap</th><th class="num">7d</th></tr></thead>
+      <tbody id="live-rows"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="view-model" class="view" hidden>
+  <h2>How the radar scores a protocol</h2>
+  <p>Every number below comes from the sealed DefiLlama snapshot of 2026-11-14. No protocol name is ever special-cased: the same function scores every row, so running the program on a future snapshot finds future launches early.</p>
+  <h3>The formula</h3>
+  <pre class="formula">implied = TVL × category multiple × growth × maturity × chains
+multiple = median mcap/TVL of the snapshot's live-token protocols
+           in the category, shrunk toward the global median
+growth   = 1 + 0.6 × tanh(change_7d clamped to −80…+300, scaled by 60)
+maturity = 0.55 + 0.45 × rise × decay
+           rise climbs to 1.0 over the first 730 days,
+           decay falls to 0.30 over the next 1,460 days
+chains   = 1 + 0.02 × min(chains − 1, 5)</pre>
+  <h3>Why these choices</h3>
+  <ul>
+    <li><strong>Market multiple, not a flat 0.25.</strong> A lending protocol and a DEX do not launch at the same multiple of TVL. The market's own live protocols price each category; the model reads that price from the snapshot.</li>
+    <li><strong>Growth is bounded.</strong> A +26% week lifts a protocol about 25%; a −70% week halves it; a +4,448% outlier is capped, not worshipped.</li>
+    <li><strong>Maturity is a hump.</strong> Protocols in their prime launch window — one to two years old, no token yet — score highest. A protocol five years old with no token has likely chosen not to launch one.</li>
+    <li><strong>Wrapped, staked and bridged products are out.</strong> The board applies the snapshot's own watchlist definition to every row: WBTC, staked ETH and bridges can never launch a token of their own, so they never rank.</li>
+    <li><strong>Confidence is data completeness.</strong> A row loses points when the snapshot gives it no 7-day change, no listing date, no category or no chain.</li>
+  </ul>
+  <h3>Constants</h3>
+  <dl class="consts" id="consts"></dl>
+  <h3>Reading a farm plan</h3>
+  <p>Each plan is generated from the protocol's own record — its category, its chains, its TVL and its age. Capital follows TVL ($50–$250 a position), the hold follows age (30–60 days), and gas follows the chain. Never pay to claim an airdrop: check the protocol's own points page from the link it publishes.</p>
+</section>
+
+<footer>
+  <p>Snapshot: DefiLlama, fetched 2026-11-14. Model radar-2. Data is a frozen snapshot; the ranking is a model's reading of it, not a promise of a token.</p>
+</footer>
+
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
